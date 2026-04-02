@@ -1,110 +1,82 @@
-# 导入 chromadb，用来做本地向量库
-import chromadb
+# 导入 Chroma 向量库实现
+from app.vectorstores.chroma_store import ChromaVectorStore
 
-# 导入 Path，用来处理本地路径
-from pathlib import Path
-
-# 导入 embedding 函数
-from app.embedder import embed_texts
+# 导入 Qdrant 向量库实现
+from app.vectorstores.qdrant_store import QdrantVectorStore
 
 
-# 本地向量库存放路径
-DB_PATH = str(Path("storage/chroma_db"))
+# 当前选择的向量库类型
+VECTOR_STORE_TYPE = "qdrant"
+
+
+def get_vector_store():
+    """
+    根据配置返回不同的向量库实例。
+    """
+    if VECTOR_STORE_TYPE == "qdrant":
+        return QdrantVectorStore()
+
+    return ChromaVectorStore()
+
+
+# 创建全局向量库实例
+vector_store = get_vector_store()
 
 
 def build_vector_store(chunks: list[dict]):
     """
-    根据 chunk 列表建立本地向量库。
+    建立向量索引。
     """
-
-    client = chromadb.PersistentClient(path=DB_PATH)
-    collection = client.get_or_create_collection(name="study_materials")
-
-    if chunks:
-        ids = [chunk["id"] for chunk in chunks]
-        documents = [chunk["content"] for chunk in chunks]
-        metadatas = [{"source": chunk["source"]} for chunk in chunks]
-        embeddings = embed_texts(documents)
-
-        # 先清空旧数据，避免重复添加
-        try:
-            existing = collection.get()
-            if existing and existing.get("ids"):
-                collection.delete(ids=existing["ids"])
-        except Exception:
-            pass
-
-        collection.add(
-            ids=ids,
-            documents=documents,
-            metadatas=metadatas,
-            embeddings=embeddings
-        )
-
-    return collection
+    vector_store.build(chunks)
 
 
 def keyword_score(query: str, content: str) -> int:
     """
     计算 query 和 content 的简单关键词命中分数。
-
-    这里先用一个非常朴素的办法：
-    遍历 query 里的每个字符，只要这个字符也出现在 content 里，就加分。
-
-    注意：
-    这不是最优算法，但很适合你当前这个学习阶段，简单、直观、容易理解。
     """
     score = 0
 
     for char in query:
-        # 跳过空格和换行这类无意义字符
         if char.strip() and char in content:
             score += 1
 
     return score
 
 
+def semantic_sort_value(item: dict) -> float:
+    """
+    给不同向量库返回的结果统一一个可排序值。
+
+    - 对 Chroma：distance 越小越好，所以直接返回 distance
+    - 对 Qdrant：score 越大越好，但我们目前把它暂存进了 distance 字段
+      所以这里取负数，转成“越小越好”的统一排序值
+    """
+    value = item["distance"]
+
+    if VECTOR_STORE_TYPE == "qdrant":
+        return -value
+
+    return value
+
+
 def search_relevant_chunks(query: str, top_k: int = 3) -> list[dict]:
     """
-    根据用户问题，检索最相关的 chunk。
+    检索最相关的 chunk。
 
-    检索策略：
-    1. 先用向量检索召回一批结果
-    2. 再按“关键词命中数 + 向量距离”做一次简单重排
+    流程：
+    1. 先让底层向量库召回 5 条
+    2. 再按关键词命中数 + 语义排序值做简单重排
+    3. 最后返回 top_k 条
     """
 
-    client = chromadb.PersistentClient(path=DB_PATH)
-    collection = client.get_or_create_collection(name="study_materials")
+    retrieved = vector_store.search(query, top_k=5)
 
-    # 先把用户问题转成向量
-    query_embedding = embed_texts([query])[0]
-
-    # 先召回稍微多一点结果，例如 5 个
-    # 这样后面重排才有意义
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=5
-    )
-
-    retrieved = []
-
-    for i in range(len(results["ids"][0])):
-        content = results["documents"][0][i]
-
-        item = {
-            "id": results["ids"][0][i],
-            "content": content,
-            "source": results["metadatas"][0][i]["source"],
-            "distance": results["distances"][0][i],
-            "keyword_score": keyword_score(query, content)
-        }
-
-        retrieved.append(item)
+    for item in retrieved:
+        item["keyword_score"] = keyword_score(query, item["content"])
 
     # 排序规则：
-    # 1. 关键词命中数越高越靠前
-    # 2. 如果关键词分数相同，则 distance 越小越靠前
-    retrieved.sort(key=lambda x: (-x["keyword_score"], x["distance"]))
+    # 1. 关键词命中高的优先
+    # 2. 语义排序值更优的优先
+    retrieved.sort(key=lambda x: (-x["keyword_score"], semantic_sort_value(x)))
 
-    # 最后只返回 top_k 条
     return retrieved[:top_k]

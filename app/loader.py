@@ -1,39 +1,45 @@
-# 导入 Path，用来处理文件路径
+# 导入 Path
 from pathlib import Path
 
-# 导入 PDF 加载函数
-from app.pdf_loader import load_pdf_documents
-
-
-def load_txt_documents(raw_dir: str = "data/raw") -> list[dict]:
-    """
-    读取 data/raw 目录下的所有 txt 文件。
-    """
-
-    raw_path = Path(raw_dir)
-    documents = []
-
-    for file_path in raw_path.glob("*.txt"):
-        text = file_path.read_text(encoding="utf-8")
-
-        documents.append({
-            "source": file_path.name,
-            "content": text
-        })
-
-    return documents
+# 导入解析器工厂
+from app.ingestion.parser_factory import ParserFactory
 
 
 def load_all_documents(raw_dir: str = "data/raw") -> list[dict]:
     """
-    同时读取 txt 和 pdf 文档，并合并返回。
+    统一加载 data/raw 下的所有支持文件。
+
+    当前支持：
+    - txt
+    - pdf
+
+    后面如果接入 OCR / docx，只需要继续扩展解析器工厂。
     """
 
-    # 读取 txt
-    txt_docs = load_txt_documents(raw_dir)
+    raw_path = Path(raw_dir)
 
-    # 读取 pdf
-    pdf_docs = load_pdf_documents(raw_dir)
+    # 用来存放所有解析成功的文档
+    documents = []
 
-    # 合并两个列表
-    return txt_docs + pdf_docs
+    # 遍历目录下所有文件
+    for file_path in raw_path.iterdir():
+        # 如果不是文件，就跳过
+        if not file_path.is_file():
+            continue
+
+        # 让工厂根据文件类型返回解析器
+        parser = ParserFactory.get_parser(file_path)
+
+        # 如果当前格式不支持，就跳过
+        if parser is None:
+            print(f"[Loader] 跳过不支持的文件类型: {file_path.name}")
+            continue
+
+        # 调解析器解析文件
+        doc = parser.parse(file_path)
+
+        # 解析成功才加入 documents
+        if doc is not None:
+            documents.append(doc)
+
+    return documents
