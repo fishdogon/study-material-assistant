@@ -38,3 +38,10 @@ class BaseVectorStore(ABC):
             检索结果列表
         """
         pass
+
+    @abstractmethod
+    def clear(self):
+        """
+        清空当前向量库中的资料索引。
+        """
+        pass

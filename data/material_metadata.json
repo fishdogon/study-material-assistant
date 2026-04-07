@@ -1,0 +1,39 @@
+{
+  "application_problem.txt": {
+    "subject": "数学",
+    "grade": "三年级",
+    "topic": "和倍问题"
+  },
+  "math_notes.txt": {
+    "subject": "数学",
+    "grade": "七年级",
+    "topic": "平行线",
+    "suggested_subject": "数学",
+    "suggested_grade": "七年级",
+    "suggested_topic": "平行线"
+  },
+  "成都2026春季二年级数学讲义 第1讲（未来预备）.pdf": {
+    "subject": "数学",
+    "grade": "二年级",
+    "topic": "周长",
+    "suggested_subject": "数学",
+    "suggested_grade": "二年级",
+    "suggested_topic": "周长"
+  },
+  "和差倍.pdf": {
+    "subject": "数学",
+    "grade": "三年级",
+    "topic": "和差倍问题",
+    "suggested_subject": "数学",
+    "suggested_grade": "三年级",
+    "suggested_topic": "和差倍问题"
+  },
+  "沸腾的温度计.jpg": {
+    "subject": "数学",
+    "grade": "二年级",
+    "topic": "逻辑推理",
+    "suggested_subject": "数学",
+    "suggested_grade": "二年级",
+    "suggested_topic": "逻辑推理"
+  }
+}

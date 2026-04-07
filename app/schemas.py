@@ -12,6 +12,11 @@ class AskRequest(BaseModel):
     }
     """
     query: str
+    source_names: list[str] = []
+    subject: str = ""
+    grade: str = ""
+    topic: str = ""
+    exclude_ocr: bool = False
 
 
 class ExplainRequest(BaseModel):
@@ -23,6 +28,13 @@ class ExplainRequest(BaseModel):
     }
     """
     query: str
+    source_names: list[str] = []
+    subject: str = ""
+    grade: str = ""
+    topic: str = ""
+    exclude_ocr: bool = False
+    teaching_mode: str = ""
+    explanation_depth: str = ""
 
 
 class ExerciseRequest(BaseModel):
@@ -37,3 +49,22 @@ class ExerciseRequest(BaseModel):
     """
     query: str
     style: str = "2"
+    source_names: list[str] = []
+    subject: str = ""
+    grade: str = ""
+    topic: str = ""
+    exclude_ocr: bool = False
+    difficulty: str = ""
+    expected_count: int = 0
+
+
+class MaterialMetadataUpdateRequest(BaseModel):
+    subject: str = ""
+    grade: str = ""
+    topic: str = ""
+
+
+class MaterialMetadataSuggestionResponse(BaseModel):
+    subject: str = ""
+    grade: str = ""
+    topic: str = ""

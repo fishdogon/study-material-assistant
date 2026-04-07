@@ -52,7 +52,15 @@ class ChromaVectorStore(BaseVectorStore):
             # 提取 id、文本内容、metadata
             ids = [chunk["id"] for chunk in chunks]
             documents = [chunk["content"] for chunk in chunks]
-            metadatas = [{"source": chunk["source"]} for chunk in chunks]
+            metadatas = [
+            {
+                "source": chunk["source"],
+                "source_type": chunk.get("source_type", "unknown"),
+                "parser_name": chunk.get("parser_name", "unknown"),
+                "is_ocr": chunk.get("is_ocr", False)
+            }
+            for chunk in chunks
+]
 
             # 生成 embeddings
             embeddings = embed_texts(documents)
@@ -72,6 +80,19 @@ class ChromaVectorStore(BaseVectorStore):
                 metadatas=metadatas,
                 embeddings=embeddings
             )
+
+    def clear(self):
+        """
+        清空当前 collection。
+        """
+        collection = self._get_collection()
+
+        try:
+            existing = collection.get()
+            if existing and existing.get("ids"):
+                collection.delete(ids=existing["ids"])
+        except Exception:
+            pass
 
     def search(self, query: str, top_k: int = 5) -> list[dict]:
         """
@@ -101,6 +122,9 @@ class ChromaVectorStore(BaseVectorStore):
                 "id": results["ids"][0][i],
                 "content": results["documents"][0][i],
                 "source": results["metadatas"][0][i]["source"],
+                "source_type": results["metadatas"][0][i].get("source_type", "unknown"),
+                "parser_name": results["metadatas"][0][i].get("parser_name", "unknown"),
+                "is_ocr": results["metadatas"][0][i].get("is_ocr", False),
                 "distance": results["distances"][0][i]
             })
 

@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color: #111827;
+    background:
+      radial-gradient(circle at top left, rgba(147, 197, 253, 0.16), rgba(147, 197, 253, 0) 18%),
+      radial-gradient(circle at top right, rgba(191, 219, 254, 0.12), rgba(191, 219, 254, 0) 22%),
+      linear-gradient(180deg, #f5f9ff 0%, #eef4fb 52%, #f7faff 100%);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-canvas font-sans text-ink;
+    background-attachment: fixed;
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-[22px] shadow-panel;
+    border: 1px solid #d9e4eb;
+    background: #fcfdff;
+  }
+
+  .input-base {
+    @apply w-full rounded-2xl px-4 py-3 text-sm text-ink outline-none transition focus:ring-4;
+    border: 1px solid #d3dee6;
+    background: #f8fbfc;
+    --tw-ring-color: rgba(147, 197, 253, 0.24);
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-[18px] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition disabled:cursor-not-allowed disabled:bg-slate-300;
+    background: #4c8df6;
+  }
+
+  .btn-primary:hover {
+    background: #3f7fe2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-[44px] items-center justify-center rounded-[18px] px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:text-slate-400;
+    border: 1px solid #d9e4eb;
+    background: #f6fafb;
+  }
+
+  .tag {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium text-slate-600 backdrop-blur;
+    border: 1px solid #d9e4eb;
+    background: #eef5ff;
+  }
+
+  .soft-card {
+    @apply rounded-[18px];
+    border: 1px solid #d9e4eb;
+    background: #f5f9fb;
+  }
+
+  .status-dot {
+    @apply inline-block h-2.5 w-2.5 rounded-full;
+  }
+
+  .section-kicker {
+    @apply text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-600;
+  }
+
+  .panel-title {
+    @apply text-[17px] font-semibold text-slate-900;
+  }
+
+  .panel-subtle {
+    @apply rounded-[18px] border px-4 py-3 text-sm leading-6;
+    border-color: #d9e4eb;
+    background: #f1f7ff;
+    color: #475569;
+  }
+
+  .panel-soft-area {
+    @apply rounded-[20px] p-4;
+    background: #f1f7ff;
+    border: 1px solid #d9e4eb;
+  }
+
+  .result-card {
+    @apply rounded-[20px] border p-4 sm:p-5;
+    border-color: #d9e4eb;
+    background: #fcfdff;
+  }
+
+  .info-table {
+    @apply overflow-hidden rounded-[20px] border bg-white;
+    border-color: #d9e4eb;
+  }
+
+  .markdown-body {
+    @apply text-sm leading-7 text-slate-800;
+  }
+
+  .markdown-body > *:first-child {
+    @apply mt-0;
+  }
+
+  .markdown-body > *:last-child {
+    @apply mb-0;
+  }
+
+  .markdown-body p,
+  .markdown-body ul,
+  .markdown-body ol,
+  .markdown-body pre,
+  .markdown-body blockquote,
+  .markdown-body table {
+    @apply my-3;
+  }
+
+  .markdown-body ul {
+    @apply list-disc pl-5;
+  }
+
+  .markdown-body ol {
+    @apply list-decimal pl-5;
+  }
+
+  .markdown-body li {
+    @apply my-1;
+  }
+
+  .markdown-body strong {
+    @apply font-semibold text-slate-900;
+  }
+
+  .markdown-body code {
+    @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-800;
+  }
+
+  .markdown-body pre {
+    @apply overflow-x-auto rounded-xl bg-slate-950 p-4 text-slate-100;
+  }
+
+  .markdown-body pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .markdown-body blockquote {
+    @apply border-l-4 border-slate-200 pl-4 text-slate-600;
+  }
+
+  .markdown-body a {
+    @apply text-accent underline underline-offset-2;
+  }
+
+  .markdown-body table {
+    @apply w-full border-collapse overflow-hidden rounded-xl border border-line;
+  }
+
+  .markdown-body thead {
+    @apply bg-slate-50;
+  }
+
+  .markdown-body th,
+  .markdown-body td {
+    @apply border border-line px-3 py-2 text-left;
+  }
+}

@@ -5,7 +5,7 @@ from app.loader import load_all_documents
 from app.chunker import chunk_documents
 
 # 导入向量建库和检索函数
-from app.retriever import build_vector_store, search_relevant_chunks
+from app.retriever import build_vector_store, clear_vector_store, search_relevant_chunks
 
 # 导入普通问答生成函数
 from app.generator import generate_answer
@@ -27,36 +27,68 @@ def init_pipeline():
 
     documents = load_all_documents("data/raw")
     chunks = chunk_documents(documents)
-    build_vector_store(chunks)
+
+    if chunks:
+        build_vector_store(chunks)
+    else:
+        clear_vector_store()
 
     return chunks
 
 
-def ask_question(query: str) -> tuple[str, list[dict]]:
+def ask_question(
+    query: str,
+    source_names: list[str] | None = None,
+    exclude_ocr: bool = False
+) -> tuple[str, list[dict]]:
     """
     资料问答模式：
     检索资料后，生成普通回答。
     """
-    retrieved_chunks = search_relevant_chunks(query, top_k=3)
+    retrieved_chunks = search_relevant_chunks(query, top_k=3, source_names=source_names, exclude_ocr=exclude_ocr)
     answer = generate_answer(query, retrieved_chunks)
     return answer, retrieved_chunks
 
 
-def explain_for_teaching(query: str) -> tuple[str, list[dict]]:
+def explain_for_teaching(
+    query: str,
+    source_names: list[str] | None = None,
+    exclude_ocr: bool = False,
+    teaching_mode: str = "",
+    explanation_depth: str = "",
+) -> tuple[str, list[dict]]:
     """
     教学讲解模式：
     检索资料后，生成适合教学的讲解。
     """
-    retrieved_chunks = search_relevant_chunks(query, top_k=3)
-    answer = generate_teaching_explanation(query, retrieved_chunks)
+    retrieved_chunks = search_relevant_chunks(query, top_k=4, source_names=source_names, exclude_ocr=exclude_ocr)
+    answer = generate_teaching_explanation(
+        query,
+        retrieved_chunks,
+        teaching_mode=teaching_mode,
+        explanation_depth=explanation_depth,
+    )
     return answer, retrieved_chunks
 
 
-def generate_exercise_from_material(query: str) -> tuple[dict, list[dict]]:
+def generate_exercise_from_material(
+    query: str,
+    style: str = "2",
+    source_names: list[str] | None = None,
+    exclude_ocr: bool = False,
+    difficulty: str = "",
+    expected_count: int = 0,
+) -> tuple[dict, list[dict]]:
     """
     练习题生成模式：
     检索资料后，基于资料内容生成结构化练习题。
     """
-    retrieved_chunks = search_relevant_chunks(query, top_k=3)
-    answer = generate_exercise(query, retrieved_chunks)
+    retrieved_chunks = search_relevant_chunks(query, top_k=4, source_names=source_names, exclude_ocr=exclude_ocr)
+    answer = generate_exercise(
+        query,
+        retrieved_chunks,
+        style=style,
+        difficulty=difficulty,
+        expected_count=expected_count,
+    )
     return answer, retrieved_chunks

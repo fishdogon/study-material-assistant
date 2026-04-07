@@ -1,37 +1,51 @@
-# 导入 Path
 from pathlib import Path
+import subprocess
+import json
 
-# 导入统一基类
 from app.ingestion.base_parser import BaseParser
 
 
 class OcrParser(BaseParser):
     """
-    OCR 解析器（第一版占位实现）。
-
-    这个类现在先不真正做 OCR，
-    只负责占住“图片 / 扫描件资料以后该怎么接”的位置。
-
-    后面如果你接 PaddleOCR，
-    就主要改这个类里的 parse() 方法。
+    OCR 解析器（通过独立 OCR 环境脚本调用）。
     """
 
     def parse(self, file_path: Path) -> dict | None:
-        """
-        解析图片 / 扫描类文件。
+        try:
+            ocr_script = "/Users/long/Downloads/workSpace/ocr-test/run_ocr.py"
+            ocr_python = "/Users/long/Downloads/workSpace/ocr-test/.venv/bin/python"
 
-        当前版本：
-        - 不真正识别
-        - 只打印提示
-        - 返回 None
+            result = subprocess.run(
+                [ocr_python, ocr_script, str(file_path)],
+                capture_output=True,
+                text=True,
+                encoding="utf-8"
+            )
 
-        后面版本：
-        - 调 OCR 模型
-        - 提取文本
-        - 返回统一格式
-        """
+            if not result.stdout.strip():
+                print(f"[OcrParser] OCR 无输出: {file_path.name}")
+                return None
 
-        print(f"[OcrParser] 当前还未接入真正 OCR: {file_path.name}")
+            parsed = json.loads(result.stdout)
 
-        # 现在先不处理，返回 None
-        return None
+            if not parsed.get("success"):
+                print(f"[OcrParser] OCR 失败: {file_path.name} -> {parsed.get('error')}")
+                return None
+
+            content = parsed.get("content", "").strip()
+
+            if not content:
+                print(f"[OcrParser] OCR 未识别到有效文本: {file_path.name}")
+                return None
+
+            return {
+                "source": file_path.name,
+                "content": content,
+                "source_type": "image",
+                "parser_name": "OcrParser",
+                "is_ocr": True
+            }
+
+        except Exception as e:
+            print(f"[OcrParser] 解析失败: {file_path.name} -> {e}")
+            return None

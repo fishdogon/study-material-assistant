@@ -103,7 +103,10 @@ class QdrantVectorStore(BaseVectorStore):
                     payload={
                         "chunk_id": chunk["id"],
                         "source": chunk["source"],
-                        "content": chunk["content"]
+                        "content": chunk["content"],
+                        "source_type": chunk.get("source_type", "unknown"),
+                        "parser_name": chunk.get("parser_name", "unknown"),
+                        "is_ocr": chunk.get("is_ocr", False)
                     }
                 )
             )
@@ -113,6 +116,15 @@ class QdrantVectorStore(BaseVectorStore):
             collection_name=self.collection_name,
             points=points
         )
+
+    def clear(self):
+        """
+        清空 collection。
+        """
+        try:
+            self.client.delete_collection(collection_name=self.collection_name)
+        except Exception:
+            pass
 
     def search(self, query: str, top_k: int = 5) -> list[dict]:
         """
@@ -137,7 +149,9 @@ class QdrantVectorStore(BaseVectorStore):
                 "id": item.payload["chunk_id"],
                 "content": item.payload["content"],
                 "source": item.payload["source"],
-                # 这里仍然先放到 distance 字段，供上层统一排序逻辑使用
+                "source_type": item.payload.get("source_type", "unknown"),
+                "parser_name": item.payload.get("parser_name", "unknown"),
+                "is_ocr": item.payload.get("is_ocr", False),
                 "distance": item.score
             })
 
